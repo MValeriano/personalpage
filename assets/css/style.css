@@ -7,12 +7,26 @@
 body {	
 	background-image: linear-gradient(to bottom right, #f4fcf8, #93e9be);
 	font-family:Arial;
-	backgroung-size: auto 100vh;
+	background-size: auto 100vh;
 	height:100vh;	
+	font-size: 14px;
+}
+
+@media (min-width:400px) {
+	body{
+		font-size: 18px;
+	}
 }
 
 header {
 	height: 100vh;
+	display:flex;
+	/*
+		display:flex;
+			header vira flex container, só pega o objeto pai e o objeto filho
+	*/
+	justify-content: center;
+	align-items: center;
 }
 
 .linkMenu {
@@ -21,8 +35,9 @@ header {
 }
 
 .menu {
-	background:#75ba98;
+	background:#93da93;
 	position: fixed;
+	top:0; /* Só existe com o position ativado*/
 	width: 100vw;
 	height: 61px;
 }
@@ -54,4 +69,9 @@ header {
 
 .site-subtitle{
 	font-style: italic;
+}
+
+.img-portifolio{
+	height:180px;
+	width: 180px;
 }
