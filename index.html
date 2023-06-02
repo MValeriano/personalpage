@@ -1,33 +1,39 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SEGBEL CORRETORA DE SEGUROS</title>
-    <style>
-        body{
-            background-color: #23438e;
-            color: white;
-        }
-        .logo{
-            height: 150px;
-            float:left;
-        }
-        span{
-            color: #ffdf00;
-        }
-        p{
-            font-size: 30px;
-        }
-    </style>
+  <style>
+    .container {
+      background-image: url('{imagem_envio}');
+      background-size: cover;
+      background-position: center;
+      position: relative;
+      width: 600px; /* Defina a largura do container conforme necessário */
+      height: 1100px; /* Defina a altura do container conforme necessário */
+    }
+
+    .container h1 {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      color: #ffdf00;
+      font-size: 18px;
+    }
+
+    .container #nome_cliente {
+      top: 38%;
+      left: 55%;
+    }
+
+    .container #apolice_cliente {
+      top: 48%;
+      left: 55%;
+    }
+
+  </style>
 </head>
 <body>
-    <a href="https://segbel.com.br/"><img class="logo" src="{logo_segbel}" alt="logo_segbel"></a>
-    <h1> <span>{nome_cliente}</span>, agora você já pode ficar tranquilo, sua apólice chegou!</h1>
-    <p> Nº da Apólice <span>{apolice_cliente}</span>.</p>
-    <h3> SEGBEL CORRETORA DE SEGUROS</h3>
-
-    <img src="{imagem_envio}" alt="Imagem_email_segbel"> 
+  <div class="container">
+    <h1 id="nome_cliente">{nome_cliente}</h1>
+    <h1 id="apolice_cliente">{apolice_cliente}</h1>
+  </div>
 </body>
 </html>
