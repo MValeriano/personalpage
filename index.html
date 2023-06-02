@@ -2,38 +2,66 @@
 <html>
 <head>
   <style>
+    /* Estilos inline para compatibilidade com email marketing */
     .container {
-      background-image: url('{imagem_envio}');
+      width: 600px;
+      height: 1100px;
+      position: relative;
+    }
+
+    .container-inner {
+      background-image: url('{imagem_envio}'
       background-size: cover;
       background-position: center;
-      position: relative;
-      width: 600px; /* Defina a largura do container conforme necessário */
-      height: 1100px; /* Defina a altura do container conforme necessário */
+      width: 100%;
+      height: 100%;
     }
 
-    .container h1 {
+    .text-overlay {
       position: absolute;
-      transform: translate(-50%, -50%);
       color: #ffdf00;
       font-size: 18px;
+      text-align: center;
+      width: 100%;
+      top: 45%;
+      left: 50%;
+      transform: translate(-50%, -50%);
     }
 
-    .container #nome_cliente {
-      top: 38%;
-      left: 55%;
+    .text-overlay p {
+      margin: 10px 0;
     }
 
-    .container #apolice_cliente {
+    .text-overlay .nome {
+      top: 60%;
+    }
+
+    .text-overlay .apolice {
       top: 48%;
-      left: 55%;
     }
-
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1 id="nome_cliente">{nome_cliente}</h1>
-    <h1 id="apolice_cliente">{apolice_cliente}</h1>
-  </div>
+  <!-- Tabela para layout compatível com email marketing -->
+  <table cellpadding="0" cellspacing="0" border="0" width="100%">
+    <tr>
+      <td align="center">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td>
+              <div class="container">
+                <div class="container-inner">
+                  <div class="text-overlay">
+                    <p class="nome">{nome_cliente}</p>
+                    <p class="apolice">{apolice_cliente}</p>
+                  </div>
+                </div>
+              </div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>
