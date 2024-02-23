@@ -1,7 +1,7 @@
 /* =====================================================
-Template Name   : Senicare
-Description     : Senior Care HTML5 Template
-Author          : Themesland
+Template Name   : Acolher
+Description     : Acolher HTML5 Template
+Author          : Marcelo Vieira
 Version         : 1.1
 =======================================================*/
 
