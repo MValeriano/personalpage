@@ -230,6 +230,10 @@ Version         : 1.1
         return false;
     });
 
+    // whatss button
+    $(window).on('load', function () {
+        $("#whats-button").fadeIn('slow');
+    });
 
     $(window).scroll(function () {
         if ($(this).scrollTop() > 50) {
