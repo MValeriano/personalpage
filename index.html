@@ -63,7 +63,7 @@
       <p id="baseline-info" class="mute text-sm mt-2"></p>
     </div>
     <div class="card mt-3 text-sm mute">
-      <b style="color:var(--ink)">Lembrete da Aula 1:</b> abasteça até o primeiro desarme da bomba, em superfície plana, sem completar nem arredondar. Mantenha o mesmo combustível por vários abastecimentos e faça pelo menos três medições para formar sua linha de base.
+      <b style="color:var(--ink)">Lembrete:</b> abasteça até o primeiro desarme da bomba, em superfície plana, sem completar nem arredondar. Mantenha o mesmo combustível por vários abastecimentos e faça pelo menos três medições para formar sua linha de base.
     </div>
   </section>
 
@@ -120,7 +120,7 @@
         <h2 id="t-anual" class="font-bold text-lg">Comparativo anual</h2>
         <div class="flex items-center gap-2"><label class="lbl" style="margin:0" for="ano-sel">Ano</label><select class="inp" style="width:auto" id="ano-sel"></select></div>
       </div>
-      <p class="mute text-sm mb-3">Verde: custo por km igual ou abaixo da sua linha de base (meta do curso). Vermelho: acima dela.</p>
+      <p class="mute text-sm mb-3">Verde: custo por km igual ou abaixo da sua linha de base (meta). Vermelho: acima dela.</p>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3" id="meses"></div>
     </div>
   </section>
@@ -178,7 +178,7 @@ function agg(list){ // agrega: consumo (km/L), custo (R$/km), totais
   return {km, liters:l, spent:list.reduce((s,r)=>s+r.total,0), cons: l>0?km/l:NaN, cost: km>0?t/km:NaN, n:v.length};
 }
 const byMonth = (list, y, m) => list.filter(r=>r.date.startsWith(`${y}-${String(m).padStart(2,"0")}`));
-function baseline(list){ // linha de base = primeiros 3 abastecimentos válidos (aula 1)
+function baseline(list){
   const v=valid(list).slice(0,3); return v.length>=3 ? agg(v) : null;
 }
 
