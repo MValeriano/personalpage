@@ -41,6 +41,31 @@
   .linkbtn { background: none; border: 0; padding: 8px 0; font-size: 14px; font-weight: 600; color: var(--ink); text-decoration: underline; text-decoration-color: var(--green); text-underline-offset: 3px; cursor: pointer; }
   .auth-tab.active { color: var(--ink); border-bottom-color: var(--green); }
   .password-wrapper { position: relative; }
+  /* Auth: layout base (mobile e tablet retrato) — painel da imagem oculto */
+  .auth-panel { box-sizing: border-box; width: 100%; display: flex; align-items: center; justify-content: center; }
+  .auth-hero { display: none; }
+
+  /* Auth: split-screen em telas >= 1024px (desktop / tablet paisagem) */
+  @media (min-width: 1024px) {
+    .auth-wrapper { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: stretch; padding: 0; }
+    .auth-panel { padding: 40px 32px; }
+    .auth-hero {
+      display: block; position: sticky; top: 0; align-self: start; height: 100vh; height: 100dvh; overflow: hidden;
+      background-color: var(--navy2);
+      background-image: url('login-hero.jpg');
+      background-image: image-set(url('login-hero.webp') type('image/webp'), url('login-hero.jpg') type('image/jpeg'));
+      background-size: cover; background-position: center 25%; background-repeat: no-repeat;
+    }
+    .auth-hero::before { /* gradiente para legibilidade do texto e transição suave com o painel navy */
+      content: ""; position: absolute; inset: 0;
+      background:
+        linear-gradient(to top, rgba(27,42,62,.94) 0%, rgba(27,42,62,.55) 28%, rgba(27,42,62,0) 60%),
+        linear-gradient(to left, rgba(27,42,62,.55) 0%, rgba(27,42,62,0) 18%);
+    }
+    .auth-hero-caption { position: absolute; left: 0; right: 0; bottom: 0; padding: clamp(24px, 4vw, 56px); color: #fff; }
+    .auth-hero-caption::before { content: ""; display: block; width: 48px; height: 4px; border-radius: 2px; background: var(--green); margin-bottom: 16px; }
+    .auth-hero-caption p { font-size: clamp(18px, 1.8vw, 26px); font-weight: 600; line-height: 1.35; margin: 0; max-width: 26em; }
+  }
   .password-toggle { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--mute); font-size: 18px; padding: 8px; }
 </style>
 </head>
@@ -48,6 +73,14 @@
 
 <!-- TELA DE LOGIN / CADASTRO -->
 <div id="auth-screen" class="auth-wrapper">
+  <!-- Imagem decorativa: exibida apenas em telas >= 1024px (carregada via CSS, não baixa no celular) -->
+  <aside class="auth-hero" aria-hidden="true">
+    <div class="auth-hero-caption">
+      <p>Acompanhe o consumo e o custo por km dos seus veículos de forma simples e precisa.</p>
+    </div>
+  </aside>
+
+  <div class="auth-panel">
   <div class="auth-card">
     <div class="text-center mb-6">
       <!-- Imagem corrigida -->
@@ -108,6 +141,7 @@
       <p class="text-xs mute text-center">Ao criar uma conta, você concorda com nossos Termos de Uso e Política de Privacidade.</p>
     </form>
   </div>
+  </div><!-- /.auth-panel -->
 </div>
 
 <!-- TELA PRINCIPAL DO APP (Inicialmente oculta) -->
