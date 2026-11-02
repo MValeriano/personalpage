@@ -162,13 +162,13 @@
         </div>
       </div>
       <div class="flex gap-2">
-        <button onclick="openVehicleModal()" class="btn ghost sm" style="color:white;border-color:#ffffff50" title="Veículo">🚗</button>
+        <button onclick="openVehicleModal()" class="btn ghost sm" style="color:white;border-color:#ffffff50" title="Veículos">🚗</button>
         <button onclick="go('config')" class="btn ghost sm" style="color:white;border-color:#ffffff50" title="Configurações">⚙️</button>
         <button onclick="handleLogout()" class="btn ghost sm" style="color:white;border-color:#ffffff50">Sair</button>
       </div>
     </div>
     <div style="background:var(--navy2);padding:4px 16px;font-size:12px;color:#cfd8e3" class="flex justify-between items-center">
-      <span id="veh-label">—</span>
+      <span id="veh-label" style="cursor:pointer" onclick="openVehicleModal()">—</span>
       <span id="veh-progress"></span>
     </div>
   </header>
@@ -320,7 +320,7 @@
     <section id="v-desafio" hidden aria-labelledby="t-desafio">
       <div class="card">
         <h2 id="t-desafio" class="font-bold text-lg mb-1">Desafio de 30 dias</h2>
-        <p class="mute text-sm mb-3">Requer linha de base pronta (3 medições válidas). Termina com no mínimo 30 dias e 3 medições válidas.</p>
+        <p class="mute text-sm mb-3">Requer linha de base pronta (3 medições válidas) do veículo ativo. Termina com no mínimo 30 dias e 3 medições válidas.</p>
         <div id="desafio-info"></div>
         <div class="flex gap-2 mt-3 flex-wrap">
           <button class="btn" type="button" onclick="startChallenge()">Iniciar desafio</button>
@@ -333,7 +333,7 @@
     <section id="v-custos" hidden aria-labelledby="t-custos">
       <div class="card">
         <h2 id="t-custos" class="font-bold text-lg mb-1">Custos</h2>
-        <p class="mute text-sm mb-3">Despesas por categoria + combustível pago no período. O custo total por km só aparece com ≥ 2 odômetros registrados.</p>
+        <p class="mute text-sm mb-3">Despesas por categoria + combustível pago no período, sempre do veículo ativo. O custo total por km só aparece com ≥ 2 odômetros registrados.</p>
         <form id="cost-form" class="grid grid-cols-1 sm:grid-cols-2 gap-3" onsubmit="addCost(event)">
           <div><label class="lbl" for="c-date">Data *</label><input class="inp" type="date" id="c-date" required></div>
           <div><label class="lbl" for="c-cat">Categoria *</label>
@@ -362,7 +362,7 @@
     <section id="v-viagem" hidden aria-labelledby="t-viagem">
       <div class="card">
         <h2 id="t-viagem" class="font-bold text-lg mb-1">Calculadora de viagem</h2>
-        <p class="mute text-sm mb-3">Estimativa — não altera medições do PEC.</p>
+        <p class="mute text-sm mb-3">Estimativa com base no veículo ativo — não altera medições do PEC.</p>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div><label class="lbl" for="tr-dist">Distância (km) *</label><input class="inp" type="number" step="0.1" min="0" id="tr-dist" required></div>
           <div><label class="lbl" for="tr-round">Ida e volta?</label><select class="inp" id="tr-round"><option value="0">Só ida</option><option value="1">Ida e volta</option></select></div>
@@ -388,9 +388,9 @@
         <p class="mute text-xs mt-3">Senhas são armazenadas apenas como hash PBKDF2 + salt. Nesta versão local, os dados ficam no seu navegador; para produção, use autenticação de servidor (Supabase/Firebase).</p>
       </div>
       <div class="card mt-3">
-        <h3 class="font-bold mb-2">Veículo</h3>
+        <h3 class="font-bold mb-2">Veículos</h3>
         <div id="veh-box" class="text-sm"></div>
-        <button class="btn mt-2" type="button" onclick="openVehicleModal()">Editar veículo</button>
+        <button class="btn mt-2" type="button" onclick="openVehicleModal()">Gerenciar veículos</button>
       </div>
     </section>
   </main>
@@ -410,31 +410,49 @@
   </nav>
 </div>
 
-<!-- ===================== MODAL VEÍCULO ===================== -->
+<!-- ===================== MODAL VEÍCULOS (LISTA + FORMULÁRIO) ===================== -->
 <div id="veh-modal" class="modal-bg" hidden>
-  <div class="auth-card" style="max-width:480px">
-    <h3 class="font-bold text-lg mb-3">Cadastro do veículo</h3>
-    <div class="grid grid-cols-1 gap-3">
-      <div><label class="lbl" for="veh-name">Nome ou apelido *</label><input class="inp" id="veh-name" maxlength="40" placeholder="Ex.: Meu carro"></div>
-      <div><label class="lbl" for="veh-brand">Marca e modelo *</label><input class="inp" id="veh-brand" maxlength="80" placeholder="Ex.: Volkswagen Polo"></div>
-      <div class="grid grid-cols-2 gap-3">
-        <div><label class="lbl" for="veh-year">Ano/versão</label><input class="inp" id="veh-year" maxlength="20" placeholder="2020 1.0"></div>
-        <div><label class="lbl" for="veh-tank">Capacidade do tanque (L)</label><input class="inp" id="veh-tank" type="number" step="0.1" min="0" placeholder="Opcional"></div>
+  <div class="auth-card" style="max-width:520px;max-height:92vh;overflow-y:auto">
+
+    <!-- Lista de veículos -->
+    <div id="veh-list-view">
+      <div class="flex justify-between items-center mb-3">
+        <h3 class="font-bold text-lg">Meus veículos</h3>
+        <button class="btn ghost sm" type="button" onclick="closeVehicleModal()">✕</button>
       </div>
-      <div><label class="lbl" for="veh-fuels">Combustíveis aceitos *</label>
-        <select class="inp" id="veh-fuels">
-          <option value="Gasolina">Gasolina</option>
-          <option value="Etanol">Etanol</option>
-          <option value="Flex">Gasolina/Etanol (flex)</option>
-          <option value="Diesel">Diesel</option>
-        </select>
+      <div id="veh-list" class="grid gap-2"></div>
+      <div class="flex gap-2 mt-4">
+        <button class="btn" type="button" onclick="showVehicleForm()">+ Novo veículo</button>
+        <button class="btn ghost" type="button" onclick="closeVehicleModal()">Fechar</button>
       </div>
-      <div><label class="lbl" for="veh-odo">Odômetro inicial *</label><input class="inp" id="veh-odo" type="number" step="1" min="0" placeholder="Ex.: 45000"></div>
-      <div><label class="lbl" for="veh-plate">Placa (opcional)</label><input class="inp" id="veh-plate" maxlength="10" placeholder="ABC1D23"></div>
     </div>
-    <div class="flex gap-2 mt-4">
-      <button class="btn" type="button" onclick="saveVehicle()">Salvar</button>
-      <button class="btn ghost" type="button" onclick="closeVehicleModal()">Cancelar</button>
+
+    <!-- Formulário -->
+    <div id="veh-form-view" hidden>
+      <h3 id="veh-form-title" class="font-bold text-lg mb-3">Novo veículo</h3>
+      <input type="hidden" id="veh-edit-id">
+      <div class="grid grid-cols-1 gap-3">
+        <div><label class="lbl" for="veh-name">Nome ou apelido *</label><input class="inp" id="veh-name" maxlength="40" placeholder="Ex.: Meu carro"></div>
+        <div><label class="lbl" for="veh-brand">Marca e modelo *</label><input class="inp" id="veh-brand" maxlength="80" placeholder="Ex.: Volkswagen Polo"></div>
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="lbl" for="veh-year">Ano/versão</label><input class="inp" id="veh-year" maxlength="20" placeholder="2020 1.0"></div>
+          <div><label class="lbl" for="veh-tank">Capacidade do tanque (L)</label><input class="inp" id="veh-tank" type="number" step="0.1" min="0" placeholder="Opcional"></div>
+        </div>
+        <div><label class="lbl" for="veh-fuels">Combustíveis aceitos *</label>
+          <select class="inp" id="veh-fuels">
+            <option value="Gasolina">Gasolina</option>
+            <option value="Etanol">Etanol</option>
+            <option value="Flex">Gasolina/Etanol (flex)</option>
+            <option value="Diesel">Diesel</option>
+          </select>
+        </div>
+        <div><label class="lbl" for="veh-odo">Odômetro inicial *</label><input class="inp" id="veh-odo" type="number" step="1" min="0" placeholder="Ex.: 45000"></div>
+        <div><label class="lbl" for="veh-plate">Placa (opcional)</label><input class="inp" id="veh-plate" maxlength="10" placeholder="ABC1D23"></div>
+      </div>
+      <div class="flex gap-2 mt-4 flex-wrap">
+        <button class="btn" type="button" onclick="saveVehicle()">Salvar</button>
+        <button class="btn ghost" type="button" onclick="backToVehicleList()">Voltar</button>
+      </div>
     </div>
   </div>
 </div>
@@ -508,52 +526,229 @@ function toggleAuth(type){
 }
 function togglePassword(inputId, btn){ const i=document.getElementById(inputId), show=i.type==='password'; i.type=show?'text':'password'; btn.textContent=show?'🙈':'👁️'; }
 function forgot(){ const email=prompt("Informe o e-mail da conta para receber as instruções de recuperação (nesta versão local, mostramos um token de redefinição):"); if(!email) return; const k=email.trim().toLowerCase(), u=Auth.users(); if(!u[k]){ authMsg("E-mail não encontrado.", false); return; } const token=uid().slice(0,8); try{ localStorage.setItem("pec_reset_"+k, token); }catch(e){} authMsg(`Instruções de recuperação: use o token ${token} na tela de login (ou crie nova conta com outro e-mail).`, true); }
-function enterApp(){ document.getElementById('auth-screen').hidden=true; document.getElementById('app-screen').hidden=false; resetForm(); loadVehicle(); go("painel"); }
+function enterApp(){
+  Vehicle.migrateOld();
+  document.getElementById('auth-screen').hidden=true;
+  document.getElementById('app-screen').hidden=false;
+  resetForm(); loadVehicle(); go("painel");
+  if(!Vehicle.get()) openVehicleModal();
+}
 async function submitAuth(ev, action){ ev.preventDefault(); authMsg(""); const btn=ev.submitter; if(btn) btn.disabled=true; try{ await action(); enterApp(); } catch(e){ authMsg(e.message||"Não foi possível concluir."); } finally{ if(btn) btn.disabled=false; } }
 function handleLogin(ev){ return submitAuth(ev, ()=>Auth.login(document.getElementById('login-email').value, document.getElementById('login-pass').value, document.getElementById('remember-me').checked)); }
 function handleRegister(ev){ return submitAuth(ev, ()=>Auth.register(document.getElementById('reg-name').value, document.getElementById('reg-email').value, document.getElementById('reg-pass').value, document.getElementById('reg-terms').checked)); }
-function handleLogout(){ Auth.logout(); Repo.mem=[]; Vehicle.mem=null; document.getElementById('app-screen').hidden=true; document.getElementById('auth-screen').hidden=false; document.getElementById('form-login').reset(); document.getElementById('form-register').reset(); toggleAuth('login'); }
+function handleLogout(){ Auth.logout(); Repo.mem=[]; Costs.mem=[]; document.getElementById('app-screen').hidden=true; document.getElementById('auth-screen').hidden=false; document.getElementById('form-login').reset(); document.getElementById('form-register').reset(); toggleAuth('login'); }
 
 /* =========================================================
-   2) VEÍCULO
+   2) VEÍCULOS (MÚLTIPLOS)
    ========================================================= */
 const Vehicle = {
-  mem:null,
-  get KEY(){ return "pec_vehicle_v1:"+(Auth.user?Auth.user.id:"anon"); },
-  get(){ if(this.mem) return this.mem; try{ const r=JSON.parse(localStorage.getItem(this.KEY)); if(r) this.mem=r; }catch(e){} return this.mem; },
-  save(v){ this.mem=v; try{ localStorage.setItem(this.KEY, JSON.stringify(v)); }catch(e){} },
-  remove(){ this.mem=null; try{ localStorage.removeItem(this.KEY); }catch(e){} }
+  get LIST_KEY(){ return "pec_vehicles_v1:"+(Auth.user?Auth.user.id:"anon"); },
+  get ACTIVE_KEY(){ return "pec_active_vehicle_v1:"+(Auth.user?Auth.user.id:"anon"); },
+
+  list(){
+    try{
+      const raw = JSON.parse(localStorage.getItem(this.LIST_KEY)||"[]");
+      return Array.isArray(raw) ? raw.filter(v=>v && typeof v==='object' && v.id) : [];
+    }catch(e){ return []; }
+  },
+  saveList(list){ try{ localStorage.setItem(this.LIST_KEY, JSON.stringify(list)); }catch(e){} },
+
+  getActiveId(){ try{ return localStorage.getItem(this.ACTIVE_KEY)||null; }catch(e){ return null; } },
+  setActiveId(id){
+    try{
+      if(id) localStorage.setItem(this.ACTIVE_KEY, id);
+      else localStorage.removeItem(this.ACTIVE_KEY);
+    }catch(e){}
+  },
+
+  get(){
+    const list = this.list();
+    if(!list.length) return null;
+    const id = this.getActiveId();
+    return list.find(v=>v.id===id) || list[0];
+  },
+  byId(id){ return this.list().find(v=>v.id===id) || null; },
+
+  save(v){
+    const list = this.list();
+    const idx = list.findIndex(x=>x.id===v.id);
+    if(idx>=0) list[idx]=v; else list.push(v);
+    this.saveList(list);
+    if(!this.getActiveId()) this.setActiveId(v.id);
+  },
+
+  remove(id){
+    const list = this.list().filter(v=>v.id!==id);
+    this.saveList(list);
+    // Apaga dados vinculados ao veículo
+    Repo.clearForVehicle(id);
+    Costs.clearForVehicle(id);
+    try{ localStorage.removeItem(challengeKeyFor(id)); }catch(e){}
+    FUELS.forEach(f=>{ try{ localStorage.removeItem(baselineKeyFor(id,f)); }catch(e){} });
+    if(this.getActiveId()===id) this.setActiveId(list[0]?.id||null);
+  },
+
+  // Migração: single-vehicle antigo -> lista
+  migrateOld(){
+    if(this.list().length) return;
+    const u = Auth.user ? Auth.user.id : "anon";
+    try{
+      const old = JSON.parse(localStorage.getItem("pec_vehicle_v1:"+u) || "null");
+      if(!old) return;
+      const id = old.id || uid();
+      const newV = { ...old, id, createdAt: old.createdAt || new Date().toISOString() };
+      this.saveList([newV]);
+      this.setActiveId(id);
+
+      const oldAbs = localStorage.getItem("pec_abastecimentos_v1:"+u);
+      if(oldAbs) localStorage.setItem("pec_abastecimentos_v1:"+u+":"+id, oldAbs);
+
+      const oldCosts = localStorage.getItem("pec_custos_v1:"+u);
+      if(oldCosts) localStorage.setItem("pec_custos_v1:"+u+":"+id, oldCosts);
+
+      const oldChal = localStorage.getItem("pec_desafio_v1:"+u);
+      if(oldChal) localStorage.setItem("pec_desafio_v1:"+u+":"+id, oldChal);
+
+      FUELS.forEach(f=>{
+        const b = localStorage.getItem("pec_baseline_v1:"+u+":"+f);
+        if(b) localStorage.setItem("pec_baseline_v1:"+u+":"+id+":"+f, b);
+      });
+
+      // Limpa chaves antigas
+      localStorage.removeItem("pec_vehicle_v1:"+u);
+      localStorage.removeItem("pec_abastecimentos_v1:"+u);
+      localStorage.removeItem("pec_custos_v1:"+u);
+      localStorage.removeItem("pec_desafio_v1:"+u);
+      FUELS.forEach(f=>localStorage.removeItem("pec_baseline_v1:"+u+":"+f));
+    }catch(e){}
+  }
 };
-function openVehicleModal(){
-  const v=Vehicle.get();
-  if(v){ $('#veh-name').value=v.name; $('#veh-brand').value=v.brand; $('#veh-year').value=v.year||''; $('#veh-tank').value=v.tank||''; $('#veh-fuels').value=v.fuels||'Gasolina'; $('#veh-odo').value=v.odo||''; $('#veh-plate').value=v.plate||''; }
-  else { ['veh-name','veh-brand','veh-year','veh-tank','veh-odo','veh-plate'].forEach(id=>$('#'+id).value=''); $('#veh-fuels').value='Gasolina'; }
-  $('#veh-modal').hidden=false;
-}
+
+function activeVehId(){ const v = Vehicle.get(); return v ? v.id : "none"; }
+
+/* ---- Modal de veículos (lista + formulário) ---- */
+function openVehicleModal(){ showVehicleList(); $('#veh-modal').hidden=false; }
 function closeVehicleModal(){ $('#veh-modal').hidden=true; }
-function saveVehicle(){
-  const v={ name:$('#veh-name').value.trim(), brand:$('#veh-brand').value.trim(), year:$('#veh-year').value.trim(),
-    tank:Number($('#veh-tank').value)||null, fuels:$('#veh-fuels').value, odo:Number($('#veh-odo').value)||0,
-    plate:$('#veh-plate').value.trim().toUpperCase() };
-  if(!v.name || !v.brand || (v.odo===0 && !$('#veh-odo').value)){ alert("Preencha nome, marca/modelo e odômetro inicial."); return; }
-  Vehicle.save(v); closeVehicleModal(); loadVehicle(); render();
+
+function showVehicleList(){
+  $('#veh-list-view').hidden=false;
+  $('#veh-form-view').hidden=true;
+  const list = Vehicle.list(), activeId = Vehicle.get()?.id;
+  const el = $('#veh-list');
+  if(!list.length){
+    el.innerHTML = '<p class="mute text-sm">Nenhum veículo cadastrado. Adicione seu primeiro veículo.</p>';
+    return;
+  }
+  el.innerHTML = list.map(v=>`
+    <div class="card" style="padding:12px;border:2px solid ${v.id===activeId?'var(--green)':'var(--line)'}">
+      <div class="flex justify-between items-start gap-2">
+        <div>
+          <p><b>${esc(v.name||'')}</b> ${v.id===activeId?'<span class="pill ok">Ativo</span>':''}</p>
+          <p class="mute text-xs">${esc(v.brand||'')} ${esc(v.year||'')} · ${esc(v.fuels||'')}</p>
+          <p class="mute text-xs">Odômetro inicial: ${fmt(v.odo||0,0)} km${v.plate?' · '+esc(v.plate):''}</p>
+        </div>
+      </div>
+      <div class="flex gap-2 mt-2 flex-wrap">
+        ${v.id!==activeId?`<button class="btn sm" type="button" onclick="selectVehicle('${esc(v.id)}')">Usar</button>`:''}
+        <button class="btn ghost sm" type="button" onclick="editVehicle('${esc(v.id)}')">Editar</button>
+        <button class="btn ghost sm" type="button" onclick="deleteVehicle('${esc(v.id)}')">Excluir</button>
+      </div>
+    </div>`).join("");
 }
+
+function showVehicleForm(){
+  $('#veh-list-view').hidden=true;
+  $('#veh-form-view').hidden=false;
+  $('#veh-form-title').textContent='Novo veículo';
+  $('#veh-edit-id').value='';
+  ['veh-name','veh-brand','veh-year','veh-tank','veh-odo','veh-plate'].forEach(id=>$('#'+id).value='');
+  $('#veh-fuels').value='Gasolina';
+}
+function backToVehicleList(){ showVehicleList(); }
+
+function editVehicle(id){
+  const v = Vehicle.byId(id); if(!v) return;
+  $('#veh-list-view').hidden=true;
+  $('#veh-form-view').hidden=false;
+  $('#veh-form-title').textContent='Editar veículo';
+  $('#veh-edit-id').value = v.id;
+  $('#veh-name').value = v.name||'';
+  $('#veh-brand').value = v.brand||'';
+  $('#veh-year').value = v.year||'';
+  $('#veh-tank').value = v.tank||'';
+  $('#veh-fuels').value = v.fuels||'Gasolina';
+  $('#veh-odo').value = v.odo||'';
+  $('#veh-plate').value = v.plate||'';
+}
+
+function saveVehicle(){
+  const editId = $('#veh-edit-id').value;
+  const existing = editId ? Vehicle.byId(editId) : null;
+  const v = {
+    id: editId || uid(),
+    name: $('#veh-name').value.trim(),
+    brand: $('#veh-brand').value.trim(),
+    year: $('#veh-year').value.trim(),
+    tank: Number($('#veh-tank').value)||null,
+    fuels: $('#veh-fuels').value,
+    odo: Number($('#veh-odo').value)||0,
+    plate: $('#veh-plate').value.trim().toUpperCase(),
+    createdAt: existing?.createdAt || new Date().toISOString()
+  };
+  if(!v.name || !v.brand || $('#veh-odo').value===''){
+    alert("Preencha nome, marca/modelo e odômetro inicial.");
+    return;
+  }
+  Vehicle.save(v);
+  if(!editId) Vehicle.setActiveId(v.id);
+  showVehicleList();
+  resetForm(); loadVehicle(); render();
+}
+
+function selectVehicle(id){
+  Vehicle.setActiveId(id);
+  Repo.mem=[]; Costs.mem=[];
+  closeVehicleModal();
+  resetForm(); loadVehicle(); render();
+  go('painel');
+}
+
+function deleteVehicle(id){
+  if(Vehicle.list().length<=1){ alert("Você precisa ter pelo menos um veículo cadastrado."); return; }
+  const v = Vehicle.byId(id);
+  if(!confirm(`Excluir o veículo "${v?.name||''}" e todos os seus dados (abastecimentos, custos, linha de base, desafio)? Esta ação não pode ser desfeita.`)) return;
+  Vehicle.remove(id);
+  if(!Vehicle.get()){ const l=Vehicle.list(); if(l.length) Vehicle.setActiveId(l[0].id); }
+  Repo.mem=[]; Costs.mem=[];
+  showVehicleList();
+  resetForm(); loadVehicle(); render();
+}
+
 function loadVehicle(){
-  const v=Vehicle.get();
-  $('#veh-label').textContent = v ? `🚗 ${v.name||v.brand} · ${v.fuels||''}` : '🚗 Nenhum veículo cadastrado';
-  const all=sorted(), fuel=$('#pn-fuel')?$('#pn-fuel').value:'Gasolina';
-  const b=baselineFor(fuel, all);
-  const validCount = valid(all).filter(r=>r.fuel===fuel).length;
-  $('#veh-progress').textContent = b ? 'Linha de base pronta' : `${validCount}/3 medições válidas (${fuel})`;
-  if($('#veh-box')) $('#veh-box').innerHTML = v ? `
-    <p><b>${esc(v.name)}</b> · ${esc(v.brand)} ${esc(v.year||'')}</p>
-    <p class="mute">Combustíveis: ${esc(v.fuels)} · Tanque: ${v.tank?fmt(v.tank,1)+' L':'–'} · Odômetro inicial: ${fmt(v.odo,0)} km</p>
-    ${v.plate?`<p class="mute">Placa: ${esc(v.plate)}</p>`:''}` : '<p class="mute">Nenhum veículo cadastrado.</p>';
+  const v = Vehicle.get();
+  const activeFuel = $('#pn-fuel') ? $('#pn-fuel').value : 'Gasolina';
+  $('#veh-label').textContent = v
+    ? `🚗 ${v.name||v.brand} · ${v.fuels||''}`
+    : '🚗 Nenhum veículo cadastrado';
+  if(!v){
+    $('#veh-progress').textContent = 'Cadastre um veículo';
+    if($('#veh-box')) $('#veh-box').innerHTML = '<p class="mute">Nenhum veículo cadastrado.</p>';
+  } else {
+    const all = sorted();
+    const b = baselineFor(activeFuel, all);
+    const validCount = valid(all).filter(r=>r.fuel===activeFuel).length;
+    $('#veh-progress').textContent = b ? 'Linha de base pronta' : `${validCount}/3 medições válidas (${activeFuel})`;
+    if($('#veh-box')) $('#veh-box').innerHTML = `
+      <p><b>${esc(v.name)}</b> · ${esc(v.brand)} ${esc(v.year||'')}</p>
+      <p class="mute">Combustíveis: ${esc(v.fuels)} · Tanque: ${v.tank?fmt(v.tank,1)+' L':'–'} · Odômetro inicial: ${fmt(v.odo,0)} km</p>
+      ${v.plate?`<p class="mute">Placa: ${esc(v.plate)}</p>`:''}
+      <p class="mute text-xs mt-2">Total de veículos: ${Vehicle.list().length}</p>`;
+  }
   if($('#cfg-name')) $('#cfg-name').textContent = Auth.user?Auth.user.name:'';
 }
 
 /* =========================================================
-   3) REPOSITÓRIO
+   3) REPOSITÓRIO (abastecimentos) — por veículo
    ========================================================= */
 const FUELS = ["Gasolina","Etanol","Diesel","GNV"];
 function sanitize(r){
@@ -569,23 +764,25 @@ function sanitize(r){
 }
 const Repo = {
   mem:[],
-  get KEY(){ return "pec_abastecimentos_v1:"+(Auth.user?Auth.user.id:"anon"); },
+  get KEY(){ return "pec_abastecimentos_v1:"+(Auth.user?Auth.user.id:"anon")+":"+activeVehId(); },
   all(){ try{ const raw=JSON.parse(localStorage.getItem(this.KEY)||"[]"); return raw.map(sanitize).filter(Boolean); }catch(e){ return this.mem; } },
   saveAll(list){ this.mem=list; try{ localStorage.setItem(this.KEY, JSON.stringify(list)); }catch(e){} },
   upsert(rec){ const l=this.all(); const i=l.findIndex(x=>x.id===rec.id); i>=0 ? l[i]=rec : l.push(rec); this.saveAll(l); },
   remove(id){ this.saveAll(this.all().filter(x=>x.id!==id)); },
-  clear(){ this.saveAll([]); }
+  clear(){ this.saveAll([]); },
+  clearForVehicle(id){ try{ localStorage.removeItem("pec_abastecimentos_v1:"+(Auth.user?Auth.user.id:"anon")+":"+id); }catch(e){} }
 };
 const sorted = () => Repo.all().sort((a,b)=> a.date.localeCompare(b.date) || a.odometer-b.odometer);
 const valid = list => list.filter(r=>r.status==="valida");
 
 /* =========================================================
-   4) MÁQUINA DE ESTADOS + BASELINE
+   4) MÁQUINA DE ESTADOS + BASELINE — por veículo
    ========================================================= */
 const MIN_SAMPLE = 3;
-const UNUSUAL_PCT = 0.30; // limiar configurável
+const UNUSUAL_PCT = 0.30;
 
-function baselineKey(fuel){ return "pec_baseline_v1:"+(Auth.user?Auth.user.id:"anon")+":"+fuel; }
+function baselineKeyFor(vehId, fuel){ return "pec_baseline_v1:"+(Auth.user?Auth.user.id:"anon")+":"+vehId+":"+fuel; }
+function baselineKey(fuel){ return baselineKeyFor(activeVehId(), fuel); }
 function invalidateBaseline(fuel){ try{ localStorage.removeItem(baselineKey(fuel)); }catch(e){} }
 
 function median(arr){ if(!arr.length) return NaN; const s=[...arr].sort((a,b)=>a-b), m=Math.floor(s.length/2); return s.length%2?s[m]:(s[m-1]+s[m])/2; }
@@ -604,10 +801,8 @@ function classifyAll(){
     if(fuelChanged){ r.status="transicao"; prev=r; return; }
     if(r.odometer===prev.odometer){ r.status="inconsistente"; prev=r; return; }
     if(r.km<=0){ r.status="inicio"; prev=r; return; }
-    // heurística de segurança
     const cons=r.km/r.liters;
     if(cons>50 || cons<2){ r.status="inconsistente"; prev=r; return; }
-    // resultado incomum: 30% da mediana das 3 anteriores (só se não estiver pending)
     if(!r.pending){
       const prev3 = previousValidSameFuel(r.date, r.fuel, r.id);
       if(prev3.length===3){
@@ -648,6 +843,7 @@ const byMonth = (list,y,m) => list.filter(r=>r.date.startsWith(`${y}-${String(m)
    ========================================================= */
 const views = ["painel","registro","resultado","historico","anual","etanol","desafio","custos","viagem","config"];
 function go(v){
+  if(v==='registro' && !Vehicle.get()){ openVehicleModal(); return; }
   views.forEach(n=>{ const el=$("#v-"+n); if(el) el.hidden = n!==v; });
   document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected", t.dataset.view===v));
   render(); window.scrollTo(0,0);
@@ -679,7 +875,6 @@ function preview(){
   if(prev && F.fuel.value && prev.fuel!==F.fuel.value) warns.push("Combustível diferente do último: será transição (fora das médias).");
   const tank=Vehicle.get()?.tank;
   if(tank && l>tank*1.05) warns.push(`Litros acima da capacidade (${fmt(tank,1)} L). Confira.`);
-  // alerta de preço/L
   if(Number.isFinite(t)&&l>0){
     const ppl=t/l;
     const recent = sorted().filter(r=>r.fuel===F.fuel.value && r.liters>0).slice(-3).map(r=>r.total/r.liters);
@@ -687,7 +882,6 @@ function preview(){
     if(Number.isFinite(medP) && Math.abs(ppl-medP)/medP>=UNUSUAL_PCT) warns.push(`Preço por litro (${brl(ppl)}) muito diferente do histórico (${brl(medP)}). Confira litros e valor.`);
   }
   $("#f-warn").textContent = warns.join(" ");
-  // resultado incomum (consumo 30% da mediana)
   const incomum=$("#f-incomum");
   if(Number.isFinite(km)&&Number.isFinite(l)&&l>0&&km>0){
     const cons=km/l, prev3=previousValidSameFuel(F.date.value, F.fuel.value, F.id.value);
@@ -716,7 +910,6 @@ function validate(){
   if(F.total.value===""||!(t>0)) e.total="Valor deve ser maior que zero.";
   if(!e.date&&!e.odo){
     const {prev,next}=neighbors(d,F.id.value);
-    // P0: odômetro IGUAL ao anterior → aceitar com aviso (não bloqueia)
     if(prev && odo<prev.odometer) e.odo=`Deve ser maior ou igual ao registro anterior (${fmt(prev.odometer,0)} km).`;
     else if(next && odo>=next.odometer) e.odo=`Deve ser menor que o registro seguinte (${fmt(next.odometer,0)} km).`;
     if(!e.odo&&!e.km){
@@ -743,6 +936,7 @@ F.km.addEventListener("input",()=>{kmManual=F.km.value!==""; preview();});
 $("#f-cancel").addEventListener("click",resetForm);
 $("#f").addEventListener("submit",ev=>{
   ev.preventDefault();
+  if(!Vehicle.get()){ alert("Cadastre um veículo antes de registrar abastecimentos."); openVehicleModal(); return; }
   const e=validate(); showErrors(e); if(Object.keys(e).length) return;
   const correct = document.getElementById("f-correct") ? document.getElementById("f-correct").checked : false;
   const rec={id:F.id.value||uid(), date:F.date.value, odometer:Number(F.odo.value), km:Number(F.km.value),
@@ -758,7 +952,6 @@ $("#f").addEventListener("submit",ev=>{
 });
 function showResultado(rec){
   const all = sorted();
-  // invalida baseline do combustível se o registro alterado for dela
   [rec.fuel].forEach(f=>{ const b=baselineFor(f, all); if(b && b.ids && b.ids.includes(rec.id)) invalidateBaseline(f); });
   const saved = all.find(r=>r.id===rec.id) || rec;
   let body="";
@@ -806,13 +999,11 @@ function renderPainel(){
   $("#m-custo").textContent = lastN.length ? fmt(agg(lastN).cost) : "–";
   $("#m-cons-sub").textContent = `km/L · ${v.length} válidas (${fuel})`;
   $("#m-custo-sub").textContent = `R$/km · ${v.length} válidas (${fuel})`;
-  // cinza quando <3 válidas
   ["#card-cons","#card-custo"].forEach(s=>{ const el=$(s); if(el){ el.style.opacity = v.length<3 ? "0.6" : "1"; } });
   const fin = filtered.filter(r=>r.date.startsWith(`${curY}-${String(curM).padStart(2,"0")}`)).reduce((s,r)=>s+r.total,0);
   $("#m-total").textContent = brl(fin); $("#m-mes").textContent = `${MESES[curM-1]} de ${curY}`;
   $("#m-km").textContent = fmt(mesVal.km,1)+" km";
   if(b && Number.isFinite(mesVal.cost)){
-    // economia apurada: só válidas posteriores às que formaram a base
     const post = filtered.filter(r=>r.status==="valida" && r.date > (b.createdAt?.slice(0,10)||"") );
     const a = agg(post);
     const eco = Number.isFinite(a.cost) ? (b.cost - a.cost)*a.km : NaN;
@@ -825,7 +1016,6 @@ function renderPainel(){
   $("#c-ano").textContent = curY;
   $("#baseline-info").textContent = b ? `Linha de base (${fuel}): ${fmt(b.cons)} km/L e ${brl(b.cost)}/km (congelada a partir de 3 medições válidas).`
     : `Linha de base indisponível: faltam ${MIN_SAMPLE-Math.min(MIN_SAMPLE, v.length)} medição(ões) válida(s) de ${fuel}.`;
-  // gráfico
   const data = MESES.map((_,i)=>agg(byMonth(filtered.filter(r=>r.status==="valida"),curY,i+1)).cost);
   const max = Math.max(0.01,...data.filter(Number.isFinite), b?b.cost:0)*1.2;
   const W=360,H=220,pl=34,pb=26,bw=(W-pl)/12;
@@ -896,10 +1086,21 @@ $("#list").addEventListener("click",ev=>{
   }
 });
 
+function editRec(id){
+  const r = Repo.all().find(x=>x.id===id); if(!r) return;
+  go('registro');
+  F.id.value=r.id; F.date.value=r.date; F.fuel.value=r.fuel; F.odo.value=r.odometer; F.km.value=r.km;
+  F.l.value=r.liters; F.total.value=r.total; F.station.value=r.station||''; F.cnpj.value=r.cnpj||'';
+  F.conditions.value=r.conditions||''; F.notes.value=r.notes||''; F.full.checked=!!r.full;
+  $("#f-title").textContent = "Editar abastecimento";
+  preview();
+}
+
 function exportCSV(){
   const q=v=>{let s=String(v); if(/^[=+\-@]/.test(s)) s="'"+s; return '"'+s.replace(/"/g,'""')+'"';};
-  const rows=[["Data","Veiculo","Combustivel","Status","Odometro","Km","Litros","PrecoLitro","ValorPago","Consumo","CustoPorKm","TanqueCheio","Posto","CNPJ","Condicoes","Observacoes"],
-    ...sorted().map(r=>[r.date, Vehicle.get()?.name||"", r.fuel, r.status, r.odometer, r.km, r.liters,
+  const veh = Vehicle.get();
+  const rows=[["Veiculo","Data","Combustivel","Status","Odometro","Km","Litros","PrecoLitro","ValorPago","Consumo","CustoPorKm","TanqueCheio","Posto","CNPJ","Condicoes","Observacoes"],
+    ...sorted().map(r=>[veh?.name||"", r.date, r.fuel, r.status, r.odometer, r.km, r.liters,
       r.liters?(r.total/r.liters):"", r.total, r.km>0?r.km/r.liters:"", r.km>0?r.total/r.km:"",
       r.full?"Sim":"Nao", r.station||"", r.cnpj||"", r.conditions||"", r.notes||""])];
   const blob=new Blob(["\ufeff"+rows.map(r=>r.map(q).join(";")).join("\n")],{type:"text/csv"});
@@ -967,29 +1168,27 @@ function renderEtanol(){
 ["cmp-pg","cmp-pe"].forEach(id=>$("#"+id).addEventListener("input",()=>{}));
 
 /* =========================================================
-   10) DESAFIO
+   10) DESAFIO — por veículo
    ========================================================= */
-function challengeKey(){ return "pec_desafio_v1:"+(Auth.user?Auth.user.id:"anon"); }
+function challengeKeyFor(vehId){ return "pec_desafio_v1:"+(Auth.user?Auth.user.id:"anon")+":"+vehId; }
+function challengeKey(){ return challengeKeyFor(activeVehId()); }
 function getChallenge(){ try{ return JSON.parse(localStorage.getItem(challengeKey())); }catch(e){ return null; } }
 function setChallenge(c){ try{ localStorage.setItem(challengeKey(), JSON.stringify(c)); }catch(e){} }
 function startChallenge(){
   const all=sorted(), fuel=$('#pn-fuel').value||'Gasolina', b=baselineFor(fuel, all);
-  if(!b){ alert("Você precisa de uma linha de base com 3 medições válidas antes de iniciar o desafio."); return; }
+  if(!b){ alert("Você precisa de uma linha de base com 3 medições válidas deste veículo antes de iniciar o desafio."); return; }
   setChallenge({start:today(), fuel, baseline:b, done:false}); renderDesafio();
 }
 function cancelChallenge(){ setChallenge(null); renderDesafio(); }
 function renderDesafio(){
   const c=getChallenge(), el=$("#desafio-info");
-  if(!c){ el.innerHTML=`<p class="mute">Nenhum desafio ativo. Inicie após ter a linha de base.</p>`; return; }
+  if(!c){ el.innerHTML=`<p class="mute">Nenhum desafio ativo para este veículo. Inicie após ter a linha de base.</p>`; return; }
   const all=sorted();
   const startDate=new Date(c.start+"T00:00:00");
   const days=Math.floor((Date.now()-startDate.getTime())/86400000);
-  // P0: contar válidas cujo CICLO começou >= data de início
-  // o ciclo é o registro anterior (que encerrou o tanque cheio)
   const byId = Object.fromEntries(all.map(r=>[r.id,r]));
   const v = all.filter(r=>{
     if(r.status!=="valida"||r.fuel!==c.fuel) return false;
-    // encontra o registro anterior a r (o início do ciclo)
     const idx = all.findIndex(x=>x.id===r.id);
     const prev = idx>0 ? all[idx-1] : null;
     return prev && prev.date >= c.start;
@@ -1009,15 +1208,16 @@ function renderDesafio(){
 }
 
 /* =========================================================
-   11) CUSTOS (P1)
+   11) CUSTOS — por veículo
    ========================================================= */
 const Costs = {
   mem:[],
-  get KEY(){ return "pec_custos_v1:"+(Auth.user?Auth.user.id:"anon"); },
+  get KEY(){ return "pec_custos_v1:"+(Auth.user?Auth.user.id:"anon")+":"+activeVehId(); },
   all(){ try{ return JSON.parse(localStorage.getItem(this.KEY)||"[]"); }catch(e){ return this.mem; } },
   saveAll(l){ this.mem=l; try{ localStorage.setItem(this.KEY, JSON.stringify(l)); }catch(e){} },
   add(r){ const l=this.all(); l.push(r); this.saveAll(l); },
-  remove(id){ this.saveAll(this.all().filter(x=>x.id!==id)); }
+  remove(id){ this.saveAll(this.all().filter(x=>x.id!==id)); },
+  clearForVehicle(id){ try{ localStorage.removeItem("pec_custos_v1:"+(Auth.user?Auth.user.id:"anon")+":"+id); }catch(e){} }
 };
 function addCost(ev){
   ev.preventDefault();
@@ -1038,7 +1238,6 @@ function renderCustos(){
   filteredCosts.forEach(r=>{ byCat[r.category]=(byCat[r.category]||0)+r.value; });
   const totalOther=filteredCosts.reduce((s,r)=>s+r.value,0);
   const grand=totalFuel+totalOther;
-  // custo total por km: intervalo de odômetros
   const odos=filteredFuel.map(r=>r.odometer).concat(filteredCosts.map(r=>r.odometer).filter(x=>x!=null));
   let totalKm=NaN;
   if(odos.length>=2){ const mn=Math.min(...odos), mx=Math.max(...odos); totalKm=mx-mn; }
@@ -1061,7 +1260,7 @@ $('#c-date').value=today();
 ['cost-from','cost-to'].forEach(id=>$('#'+id).addEventListener('input',renderCustos));
 
 /* =========================================================
-   12) VIAGEM (P1)
+   12) VIAGEM
    ========================================================= */
 function calcTrip(){
   const dist=Number($('#tr-dist').value)||0, round=$('#tr-round').value==='1';
@@ -1098,9 +1297,26 @@ function calcTrip(){
    ========================================================= */
 function deleteAccount(){
   if(!confirm("Excluir conta e todos os dados deste navegador? Esta ação não pode ser desfeita.")) return;
-  try{ localStorage.removeItem(Auth.USERS); }catch(e){}
-  Repo.clear(); Vehicle.remove(); Costs.saveAll([]);
-  try{ localStorage.removeItem(challengeKey()); }catch(e){}
+  const u = Auth.user ? Auth.user.key : null;
+  const uid_ = Auth.user ? Auth.user.id : "anon";
+  // Limpa dados de todos os veículos do usuário
+  Vehicle.list().forEach(v=>{
+    Repo.clearForVehicle(v.id);
+    Costs.clearForVehicle(v.id);
+    try{ localStorage.removeItem(challengeKeyFor(v.id)); }catch(e){}
+    FUELS.forEach(f=>{ try{ localStorage.removeItem(baselineKeyFor(v.id,f)); }catch(e){} });
+  });
+  // Limpa lista de veículos e seleção ativa
+  try{ localStorage.removeItem("pec_vehicles_v1:"+uid_); }catch(e){}
+  try{ localStorage.removeItem("pec_active_vehicle_v1:"+uid_); }catch(e){}
+  // Remove o usuário atual (mantém outros usuários que possam existir)
+  if(u){
+    try{
+      const users = Auth.users();
+      delete users[u];
+      localStorage.setItem(Auth.USERS, JSON.stringify(users));
+    }catch(e){}
+  }
   Auth.logout(); location.reload();
 }
 
